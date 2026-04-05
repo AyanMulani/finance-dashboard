@@ -22,6 +22,7 @@ export default function App() {
   const [filter, setFilter] = useState("all");
   const [sort, setSort] = useState("date");
   const [dark, setDark] = useState(false);
+  const [editId, setEditId] = useState(null);
 
   useEffect(() => {
     localStorage.setItem("transactions", JSON.stringify(transactions));
@@ -73,6 +74,27 @@ export default function App() {
     f.reset();
   };
 
+  const updateTransaction = (e) => {
+    e.preventDefault();
+    const f = e.target;
+
+    setTransactions(prev =>
+      prev.map(t =>
+        t.id === editId
+          ? {
+              ...t,
+              date: f.date.value,
+              amount: Number(f.amount.value),
+              category: f.category.value,
+              type: f.type.value
+            }
+          : t
+      )
+    );
+
+    setEditId(null);
+  };
+
   const exportCSV = () => {
     const rows = ["Date,Category,Amount,Type", ...transactions.map(t => `${t.date},${t.category},${t.amount},${t.type}`)];
     const blob = new Blob([rows.join("\n")], { type: "text/csv" });
@@ -90,144 +112,75 @@ export default function App() {
         <h2 className="text-xl font-bold mb-6">Finance App</h2>
 
         <nav className="space-y-2 text-gray-300">
-
-          <button
-            className="block w-full text-left hover:text-white"
-            onClick={() => document.getElementById("dashboard").scrollIntoView({ behavior: "smooth" })}
-          >
+          <button onClick={() => document.getElementById("dashboard").scrollIntoView({ behavior: "smooth" })}>
             Dashboard
           </button>
-
-          <button
-            className="block w-full text-left hover:text-white"
-            onClick={() => document.getElementById("transactions").scrollIntoView({ behavior: "smooth" })}
-          >
+          <button onClick={() => document.getElementById("transactions").scrollIntoView({ behavior: "smooth" })}>
             Transactions
           </button>
-
-          <button
-            className="block w-full text-left hover:text-white"
-            onClick={() => document.getElementById("insights").scrollIntoView({ behavior: "smooth" })}
-          >
+          <button onClick={() => document.getElementById("insights").scrollIntoView({ behavior: "smooth" })}>
             Insights
           </button>
-
         </nav>
       </aside>
 
       {/* Main */}
-      <main className="flex-1 ml-64 p-4 md:p-8 bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">
+      <main className="flex-1 ml-64 p-4 md:p-8 bg-gray-100 dark:bg-gray-900">
 
         {/* Header */}
-        <div id="dashboard" className="flex justify-between items-center mb-6">
+        <div id="dashboard" className="flex justify-between mb-6">
           <h1 className="text-3xl font-bold">Finance Dashboard</h1>
           <div className="flex gap-2">
-            <button onClick={()=>setDark(v=>!v)} className="px-3 py-1 rounded bg-black text-white">Theme</button>
-            <button onClick={exportCSV} className="px-3 py-1 rounded bg-green-500 text-white">Export CSV</button>
-          </div>
-        </div>
-
-        {/* Controls */}
-        <div className="flex gap-2 flex-wrap mb-4">
-          <select value={role} onChange={(e)=>setRole(e.target.value)} className="p-2 rounded border">
-            <option value="viewer">Viewer</option>
-            <option value="admin">Admin</option>
-          </select>
-
-          <select value={filter} onChange={(e)=>setFilter(e.target.value)} className="p-2 rounded border">
-            <option value="all">All</option>
-            <option value="income">Income</option>
-            <option value="expense">Expense</option>
-          </select>
-
-          <select value={sort} onChange={(e)=>setSort(e.target.value)} className="p-2 rounded border">
-            <option value="date">Sort by Date</option>
-            <option value="amount">Sort by Amount</option>
-          </select>
-
-          <input value={search} onChange={(e)=>setSearch(e.target.value)} placeholder="Search category" className="p-2 rounded border" />
-        </div>
-
-        {/* Summary */}
-        <div className="grid md:grid-cols-3 gap-4 mb-6">
-          {[{label:'Balance',value:balance},{label:'Income',value:income},{label:'Expense',value:expense}].map((i,idx)=>(
-            <motion.div key={idx} whileHover={{scale:1.05}} className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow">
-              <div className="text-sm opacity-70">{i.label}</div>
-              <div className="text-2xl font-semibold">₹{i.value}</div>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Charts */}
-        <div className="grid md:grid-cols-2 gap-6 mb-6">
-          <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow h-[300px]">
-            <ResponsiveContainer>
-              <LineChart data={transactions}>
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip />
-                <Line type="monotone" dataKey="amount" stroke="#6366f1" />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow h-[300px]">
-            <ResponsiveContainer>
-              <PieChart>
-                <Pie data={categoryData} dataKey="value" outerRadius={100}>
-                  {categoryData.map((e,i)=>(<Cell key={i} fill={COLORS[i%COLORS.length]} />))}
-                </Pie>
-              </PieChart>
-            </ResponsiveContainer>
+            <button onClick={()=>setDark(v=>!v)} className="bg-black text-white px-2">Theme</button>
+            <button onClick={exportCSV} className="bg-green-500 text-white px-2">Export</button>
           </div>
         </div>
 
         {/* Table */}
-        <div id="transactions" className="overflow-x-auto">
-          <table className="w-full bg-white dark:bg-gray-800 rounded-xl shadow">
+        <div id="transactions">
+          <table className="w-full bg-white">
             <thead>
-              <tr className="bg-gray-200 dark:bg-gray-700">
-                <th className="p-2">Date</th>
-                <th className="p-2">Category</th>
-                <th className="p-2">Amount</th>
-                <th className="p-2">Type</th>
+              <tr>
+                <th>Date</th><th>Category</th><th>Amount</th><th>Type</th>
+                {role === "admin" && <th>Action</th>}
               </tr>
             </thead>
             <tbody>
-              {filtered.length === 0 ? (
-                <tr><td colSpan="4" className="p-4 text-center">No Data</td></tr>
-              ) : filtered.map(t => (
-                <tr key={t.id} className="text-center border-t">
-                  <td className="p-2">{t.date}</td>
-                  <td className="p-2">{t.category}</td>
-                  <td className="p-2">₹{t.amount}</td>
-                  <td className="p-2">{t.type}</td>
+              {filtered.map(t => (
+                <tr key={t.id}>
+                  <td>{t.date}</td>
+                  <td>{t.category}</td>
+                  <td>{t.amount}</td>
+                  <td>{t.type}</td>
+
+                  {role === "admin" && (
+                    <td>
+                      <button onClick={()=>setEditId(t.id)}>Edit</button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
 
-        {/* Admin Form */}
-        {role === 'admin' && (
-          <form onSubmit={addTransaction} className="mt-4 grid md:grid-cols-4 gap-2">
-            <input name="date" type="date" required className="p-2 rounded border" />
-            <input name="amount" type="number" required placeholder="Amount" className="p-2 rounded border" />
-            <input name="category" required placeholder="Category" className="p-2 rounded border" />
-            <select name="type" className="p-2 rounded border">
+        {/* Edit Form */}
+        {editId && (
+          <form onSubmit={updateTransaction}>
+            <input name="date" type="date" required />
+            <input name="amount" type="number" required />
+            <input name="category" required />
+            <select name="type">
               <option value="income">Income</option>
               <option value="expense">Expense</option>
             </select>
-            <button className="bg-blue-500 text-white p-2 rounded col-span-full">Add Transaction</button>
+            <button>Update</button>
           </form>
         )}
 
         {/* Insights */}
-        <div id="insights" className="mt-6 bg-white dark:bg-gray-800 p-4 rounded-xl shadow">
-          <h2 className="font-bold mb-2">Insights</h2>
-          <p>Highest spending category: {highestCategory}</p>
-          <p>Total transactions: {transactions.length}</p>
-          <p>Net balance: ₹{balance}</p>
+        <div id="insights">
+          <p>Highest category: {highestCategory}</p>
         </div>
 
       </main>
