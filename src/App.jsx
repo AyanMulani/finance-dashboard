@@ -1,4 +1,3 @@
-
 import { useEffect, useMemo, useState } from "react";
 import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { motion } from "framer-motion";
@@ -17,6 +16,7 @@ export default function App() {
     const saved = localStorage.getItem("transactions");
     return saved ? JSON.parse(saved) : seedData;
   });
+
   const [role, setRole] = useState("viewer");
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
@@ -84,26 +84,42 @@ export default function App() {
 
   return (
     <div className="flex min-h-screen">
+
       {/* Sidebar */}
       <aside className="w-64 min-h-screen bg-gray-900 text-white p-6 fixed left-0 top-0">
         <h2 className="text-xl font-bold mb-6">Finance App</h2>
+
         <nav className="space-y-2 text-gray-300">
-          <button className="block w-full text-left hover:text-white">
-  Dashboard
-</button>
 
-<button className="block w-full text-left hover:text-white">
-  Transactions
-</button>
+          <button
+            className="block w-full text-left hover:text-white"
+            onClick={() => document.getElementById("dashboard").scrollIntoView({ behavior: "smooth" })}
+          >
+            Dashboard
+          </button>
 
-<button className="block w-full text-left hover:text-white">
-  Insights
-</button>
+          <button
+            className="block w-full text-left hover:text-white"
+            onClick={() => document.getElementById("transactions").scrollIntoView({ behavior: "smooth" })}
+          >
+            Transactions
+          </button>
+
+          <button
+            className="block w-full text-left hover:text-white"
+            onClick={() => document.getElementById("insights").scrollIntoView({ behavior: "smooth" })}
+          >
+            Insights
+          </button>
+
         </nav>
       </aside>
 
-<main className="flex-1 ml-64 p-4 md:p-8 bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">        {/* Header */}
-        <div className="flex justify-between items-center mb-6">
+      {/* Main */}
+      <main className="flex-1 ml-64 p-4 md:p-8 bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">
+
+        {/* Header */}
+        <div id="dashboard" className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Finance Dashboard</h1>
           <div className="flex gap-2">
             <button onClick={()=>setDark(v=>!v)} className="px-3 py-1 rounded bg-black text-white">Theme</button>
@@ -117,15 +133,18 @@ export default function App() {
             <option value="viewer">Viewer</option>
             <option value="admin">Admin</option>
           </select>
+
           <select value={filter} onChange={(e)=>setFilter(e.target.value)} className="p-2 rounded border">
             <option value="all">All</option>
             <option value="income">Income</option>
             <option value="expense">Expense</option>
           </select>
+
           <select value={sort} onChange={(e)=>setSort(e.target.value)} className="p-2 rounded border">
             <option value="date">Sort by Date</option>
             <option value="amount">Sort by Amount</option>
           </select>
+
           <input value={search} onChange={(e)=>setSearch(e.target.value)} placeholder="Search category" className="p-2 rounded border" />
         </div>
 
@@ -151,6 +170,7 @@ export default function App() {
               </LineChart>
             </ResponsiveContainer>
           </div>
+
           <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow h-[300px]">
             <ResponsiveContainer>
               <PieChart>
@@ -163,7 +183,7 @@ export default function App() {
         </div>
 
         {/* Table */}
-        <div className="overflow-x-auto">
+        <div id="transactions" className="overflow-x-auto">
           <table className="w-full bg-white dark:bg-gray-800 rounded-xl shadow">
             <thead>
               <tr className="bg-gray-200 dark:bg-gray-700">
@@ -203,12 +223,13 @@ export default function App() {
         )}
 
         {/* Insights */}
-        <div className="mt-6 bg-white dark:bg-gray-800 p-4 rounded-xl shadow">
+        <div id="insights" className="mt-6 bg-white dark:bg-gray-800 p-4 rounded-xl shadow">
           <h2 className="font-bold mb-2">Insights</h2>
           <p>Highest spending category: {highestCategory}</p>
           <p>Total transactions: {transactions.length}</p>
           <p>Net balance: ₹{balance}</p>
         </div>
+
       </main>
     </div>
   );
