@@ -85,7 +85,7 @@ export default function App() {
   return (
     <div className="flex min-h-screen">
       {/* Sidebar */}
-      <aside className="hidden md:block w-64 bg-gray-900 text-white p-6">
+      <aside className="w-64 min-h-screen bg-gray-900 text-white p-6 fixed left-0 top-0">
         <h2 className="text-xl font-bold mb-6">Finance App</h2>
         <nav className="space-y-2 text-gray-300">
           <div className="hover:text-white">Dashboard</div>
