@@ -23,6 +23,10 @@ export default function App() {
   const [sort, setSort] = useState("date");
   const [dark, setDark] = useState(false);
 
+  // ✅ NEW STATES
+  const [editId, setEditId] = useState(null);
+  const [toast, setToast] = useState("");
+
   useEffect(() => {
     localStorage.setItem("transactions", JSON.stringify(transactions));
   }, [transactions]);
@@ -71,6 +75,40 @@ export default function App() {
     };
     setTransactions(prev => [...prev, newTx]);
     f.reset();
+    showToast("Transaction Added");
+  };
+
+  // ✅ NEW FUNCTIONS
+  const showToast = (msg) => {
+    setToast(msg);
+    setTimeout(() => setToast(""), 2000);
+  };
+
+  const deleteTransaction = (id) => {
+    setTransactions(prev => prev.filter(t => t.id !== id));
+    showToast("Transaction Deleted");
+  };
+
+  const updateTransaction = (e) => {
+    e.preventDefault();
+    const f = e.target;
+
+    setTransactions(prev =>
+      prev.map(t =>
+        t.id === editId
+          ? {
+              ...t,
+              date: f.date.value,
+              amount: Number(f.amount.value),
+              category: f.category.value,
+              type: f.type.value
+            }
+          : t
+      )
+    );
+
+    setEditId(null);
+    showToast("Transaction Updated");
   };
 
   const exportCSV = () => {
@@ -85,40 +123,18 @@ export default function App() {
   return (
     <div className="flex min-h-screen">
 
-      {/* Sidebar */}
       <aside className="w-64 min-h-screen bg-gray-900 text-white p-6 fixed left-0 top-0">
         <h2 className="text-xl font-bold mb-6">Finance App</h2>
 
         <nav className="space-y-2 text-gray-300">
-
-          <button
-            className="block w-full text-left hover:text-white"
-            onClick={() => document.getElementById("dashboard").scrollIntoView({ behavior: "smooth" })}
-          >
-            Dashboard
-          </button>
-
-          <button
-            className="block w-full text-left hover:text-white"
-            onClick={() => document.getElementById("transactions").scrollIntoView({ behavior: "smooth" })}
-          >
-            Transactions
-          </button>
-
-          <button
-            className="block w-full text-left hover:text-white"
-            onClick={() => document.getElementById("insights").scrollIntoView({ behavior: "smooth" })}
-          >
-            Insights
-          </button>
-
+          <button onClick={() => document.getElementById("dashboard").scrollIntoView({ behavior: "smooth" })}>Dashboard</button>
+          <button onClick={() => document.getElementById("transactions").scrollIntoView({ behavior: "smooth" })}>Transactions</button>
+          <button onClick={() => document.getElementById("insights").scrollIntoView({ behavior: "smooth" })}>Insights</button>
         </nav>
       </aside>
 
-      {/* Main */}
       <main className="flex-1 ml-64 p-4 md:p-8 bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">
 
-        {/* Header */}
         <div id="dashboard" className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Finance Dashboard</h1>
           <div className="flex gap-2">
@@ -127,7 +143,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* Controls */}
         <div className="flex gap-2 flex-wrap mb-4">
           <select value={role} onChange={(e)=>setRole(e.target.value)} className="p-2 rounded border">
             <option value="viewer">Viewer</option>
@@ -148,7 +163,6 @@ export default function App() {
           <input value={search} onChange={(e)=>setSearch(e.target.value)} placeholder="Search category" className="p-2 rounded border" />
         </div>
 
-        {/* Summary */}
         <div className="grid md:grid-cols-3 gap-4 mb-6">
           {[{label:'Balance',value:balance},{label:'Income',value:income},{label:'Expense',value:expense}].map((i,idx)=>(
             <motion.div key={idx} whileHover={{scale:1.05}} className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow">
@@ -158,7 +172,6 @@ export default function App() {
           ))}
         </div>
 
-        {/* Charts */}
         <div className="grid md:grid-cols-2 gap-6 mb-6">
           <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow h-[300px]">
             <ResponsiveContainer>
@@ -182,7 +195,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* Table */}
         <div id="transactions" className="overflow-x-auto">
           <table className="w-full bg-white dark:bg-gray-800 rounded-xl shadow">
             <thead>
@@ -191,29 +203,49 @@ export default function App() {
                 <th className="p-2">Category</th>
                 <th className="p-2">Amount</th>
                 <th className="p-2">Type</th>
+                {role === "admin" && <th className="p-2">Action</th>}
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
-                <tr><td colSpan="4" className="p-4 text-center">No Data</td></tr>
+                <tr><td colSpan="5" className="p-4 text-center">No Data</td></tr>
               ) : filtered.map(t => (
                 <tr key={t.id} className="text-center border-t">
                   <td className="p-2">{t.date}</td>
                   <td className="p-2">{t.category}</td>
                   <td className="p-2">₹{t.amount}</td>
                   <td className="p-2">{t.type}</td>
+
+                  {role === "admin" && (
+                    <td className="p-2 space-x-2">
+                      <button onClick={()=>setEditId(t.id)} className="bg-yellow-500 text-white px-2 py-1 rounded">Edit</button>
+                      <button onClick={()=>deleteTransaction(t.id)} className="bg-red-500 text-white px-2 py-1 rounded">Delete</button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
 
-        {/* Admin Form */}
+        {editId && role === "admin" && (
+          <form onSubmit={updateTransaction} className="mt-4 grid md:grid-cols-4 gap-2 bg-yellow-100 p-4 rounded">
+            <input name="date" type="date" required className="p-2 rounded border" />
+            <input name="amount" type="number" required className="p-2 rounded border" />
+            <input name="category" required className="p-2 rounded border" />
+            <select name="type" className="p-2 rounded border">
+              <option value="income">Income</option>
+              <option value="expense">Expense</option>
+            </select>
+            <button className="bg-yellow-500 text-white p-2 rounded col-span-full">Update</button>
+          </form>
+        )}
+
         {role === 'admin' && (
           <form onSubmit={addTransaction} className="mt-4 grid md:grid-cols-4 gap-2">
             <input name="date" type="date" required className="p-2 rounded border" />
-            <input name="amount" type="number" required placeholder="Amount" className="p-2 rounded border" />
-            <input name="category" required placeholder="Category" className="p-2 rounded border" />
+            <input name="amount" type="number" required className="p-2 rounded border" />
+            <input name="category" required className="p-2 rounded border" />
             <select name="type" className="p-2 rounded border">
               <option value="income">Income</option>
               <option value="expense">Expense</option>
@@ -222,13 +254,19 @@ export default function App() {
           </form>
         )}
 
-        {/* Insights */}
         <div id="insights" className="mt-6 bg-white dark:bg-gray-800 p-4 rounded-xl shadow">
           <h2 className="font-bold mb-2">Insights</h2>
           <p>Highest spending category: {highestCategory}</p>
           <p>Total transactions: {transactions.length}</p>
           <p>Net balance: ₹{balance}</p>
         </div>
+
+        {/* Toast */}
+        {toast && (
+          <div className="fixed bottom-5 right-5 bg-black text-white px-4 py-2 rounded shadow">
+            {toast}
+          </div>
+        )}
 
       </main>
     </div>
