@@ -5,11 +5,9 @@ import { motion } from "framer-motion";
 const seedData = [
   { id: 1, date: "2026-04-01", amount: 5000, category: "Salary", type: "income" },
   { id: 2, date: "2026-04-02", amount: 1200, category: "Food", type: "expense" },
-  { id: 3, date: "2026-04-03", amount: 2000, category: "Shopping", type: "expense" },
-  { id: 4, date: "2026-04-04", amount: 800, category: "Transport", type: "expense" },
 ];
 
-const COLORS = ["#6366f1", "#22c55e", "#f59e0b", "#ef4444", "#06b6d4", "#a855f7"];
+const COLORS = ["#6366f1", "#22c55e", "#f59e0b", "#ef4444"];
 
 export default function App() {
   const [transactions, setTransactions] = useState(() => {
@@ -18,60 +16,16 @@ export default function App() {
   });
 
   const [role, setRole] = useState("viewer");
-  const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("all");
-  const [sort, setSort] = useState("date");
-  const [dark, setDark] = useState(false);
   const [editId, setEditId] = useState(null);
+  const [toast, setToast] = useState("");
 
   useEffect(() => {
     localStorage.setItem("transactions", JSON.stringify(transactions));
   }, [transactions]);
 
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", dark);
-  }, [dark]);
-
-  const income = useMemo(() => transactions.filter(t => t.type === "income").reduce((a,b)=>a+b.amount,0), [transactions]);
-  const expense = useMemo(() => transactions.filter(t => t.type === "expense").reduce((a,b)=>a+b.amount,0), [transactions]);
-  const balance = income - expense;
-
-  const filtered = useMemo(() => {
-    let list = transactions
-      .filter(t => t.category.toLowerCase().includes(search.toLowerCase()))
-      .filter(t => filter === "all" ? true : t.type === filter);
-
-    if (sort === "amount") list = [...list].sort((a,b)=>b.amount-a.amount);
-    if (sort === "date") list = [...list].sort((a,b)=>new Date(b.date)-new Date(a.date));
-    return list;
-  }, [transactions, search, filter, sort]);
-
-  const categoryData = useMemo(() => {
-    const map = {};
-    transactions.forEach(t => {
-      if (!map[t.category]) map[t.category] = { name: t.category, value: 0 };
-      map[t.category].value += t.amount;
-    });
-    return Object.values(map);
-  }, [transactions]);
-
-  const highestCategory = useMemo(() => {
-    if (!categoryData.length) return "N/A";
-    return [...categoryData].sort((a,b)=>b.value-a.value)[0].name;
-  }, [categoryData]);
-
-  const addTransaction = (e) => {
-    e.preventDefault();
-    const f = e.target;
-    const newTx = {
-      id: Date.now(),
-      date: f.date.value,
-      amount: Number(f.amount.value),
-      category: f.category.value,
-      type: f.type.value
-    };
-    setTransactions(prev => [...prev, newTx]);
-    f.reset();
+  const deleteTransaction = (id) => {
+    setTransactions(prev => prev.filter(t => t.id !== id));
+    showToast("Transaction Deleted");
   };
 
   const updateTransaction = (e) => {
@@ -81,107 +35,76 @@ export default function App() {
     setTransactions(prev =>
       prev.map(t =>
         t.id === editId
-          ? {
-              ...t,
-              date: f.date.value,
-              amount: Number(f.amount.value),
-              category: f.category.value,
-              type: f.type.value
-            }
+          ? { ...t, category: f.category.value, amount: Number(f.amount.value) }
           : t
       )
     );
 
     setEditId(null);
+    showToast("Transaction Updated");
   };
 
-  const exportCSV = () => {
-    const rows = ["Date,Category,Amount,Type", ...transactions.map(t => `${t.date},${t.category},${t.amount},${t.type}`)];
-    const blob = new Blob([rows.join("\n")], { type: "text/csv" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = "transactions.csv";
-    link.click();
+  const showToast = (msg) => {
+    setToast(msg);
+    setTimeout(() => setToast(""), 2000);
   };
 
   return (
     <div className="flex min-h-screen">
 
       {/* Sidebar */}
-      <aside className="w-64 min-h-screen bg-gray-900 text-white p-6 fixed left-0 top-0">
-        <h2 className="text-xl font-bold mb-6">Finance App</h2>
-
-        <nav className="space-y-2 text-gray-300">
-          <button onClick={() => document.getElementById("dashboard").scrollIntoView({ behavior: "smooth" })}>
-            Dashboard
-          </button>
-          <button onClick={() => document.getElementById("transactions").scrollIntoView({ behavior: "smooth" })}>
-            Transactions
-          </button>
-          <button onClick={() => document.getElementById("insights").scrollIntoView({ behavior: "smooth" })}>
-            Insights
-          </button>
-        </nav>
+      <aside className="w-64 bg-gray-900 text-white p-6">
+        <h2 className="font-bold mb-4">Finance</h2>
       </aside>
 
-      {/* Main */}
-      <main className="flex-1 ml-64 p-4 md:p-8 bg-gray-100 dark:bg-gray-900">
+      <main className="flex-1 p-6">
 
-        {/* Header */}
-        <div id="dashboard" className="flex justify-between mb-6">
-          <h1 className="text-3xl font-bold">Finance Dashboard</h1>
-          <div className="flex gap-2">
-            <button onClick={()=>setDark(v=>!v)} className="bg-black text-white px-2">Theme</button>
-            <button onClick={exportCSV} className="bg-green-500 text-white px-2">Export</button>
-          </div>
-        </div>
+        {/* Role */}
+        <select onChange={(e)=>setRole(e.target.value)}>
+          <option value="viewer">Viewer</option>
+          <option value="admin">Admin</option>
+        </select>
 
         {/* Table */}
-        <div id="transactions">
-          <table className="w-full bg-white">
-            <thead>
-              <tr>
-                <th>Date</th><th>Category</th><th>Amount</th><th>Type</th>
-                {role === "admin" && <th>Action</th>}
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map(t => (
-                <tr key={t.id}>
-                  <td>{t.date}</td>
-                  <td>{t.category}</td>
-                  <td>{t.amount}</td>
-                  <td>{t.type}</td>
+        <table className="w-full mt-4">
+          <thead>
+            <tr>
+              <th>Category</th><th>Amount</th>
+              {role==="admin" && <th>Actions</th>}
+            </tr>
+          </thead>
+          <tbody>
+            {transactions.map(t => (
+              <tr key={t.id}>
+                <td>{t.category}</td>
+                <td>{t.amount}</td>
 
-                  {role === "admin" && (
-                    <td>
-                      <button onClick={()=>setEditId(t.id)}>Edit</button>
-                    </td>
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                {role==="admin" && (
+                  <td className="space-x-2">
+                    <button onClick={()=>setEditId(t.id)}>✏️</button>
+                    <button onClick={()=>deleteTransaction(t.id)}>🗑️</button>
+                  </td>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
 
         {/* Edit Form */}
         {editId && (
-          <form onSubmit={updateTransaction}>
-            <input name="date" type="date" required />
+          <form onSubmit={updateTransaction} className="mt-4 p-4 bg-gray-100 rounded">
+            <input name="category" placeholder="Category" required />
             <input name="amount" type="number" required />
-            <input name="category" required />
-            <select name="type">
-              <option value="income">Income</option>
-              <option value="expense">Expense</option>
-            </select>
-            <button>Update</button>
+            <button className="bg-blue-500 text-white px-2">Update</button>
           </form>
         )}
 
-        {/* Insights */}
-        <div id="insights">
-          <p>Highest category: {highestCategory}</p>
-        </div>
+        {/* Toast */}
+        {toast && (
+          <div className="fixed bottom-5 right-5 bg-black text-white px-4 py-2 rounded">
+            {toast}
+          </div>
+        )}
 
       </main>
     </div>
