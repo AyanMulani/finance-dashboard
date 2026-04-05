@@ -88,14 +88,21 @@ export default function App() {
       <aside className="w-64 min-h-screen bg-gray-900 text-white p-6 fixed left-0 top-0">
         <h2 className="text-xl font-bold mb-6">Finance App</h2>
         <nav className="space-y-2 text-gray-300">
-          <div className="hover:text-white">Dashboard</div>
-          <div className="hover:text-white">Transactions</div>
-          <div className="hover:text-white">Insights</div>
+          <button className="block w-full text-left hover:text-white">
+  Dashboard
+</button>
+
+<button className="block w-full text-left hover:text-white">
+  Transactions
+</button>
+
+<button className="block w-full text-left hover:text-white">
+  Insights
+</button>
         </nav>
       </aside>
 
-      <main className="flex-1 p-4 md:p-8 bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">
-        {/* Header */}
+<main className="flex-1 ml-64 p-4 md:p-8 bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">        {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Finance Dashboard</h1>
           <div className="flex gap-2">
