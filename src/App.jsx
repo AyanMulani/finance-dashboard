@@ -23,6 +23,7 @@ export default function App() {
   const [sort, setSort] = useState("date");
   const [dark, setDark] = useState(false);
 
+  // ✅ NEW STATES
   const [editId, setEditId] = useState(null);
   const [toast, setToast] = useState("");
 
@@ -62,6 +63,22 @@ export default function App() {
     return [...categoryData].sort((a,b)=>b.value-a.value)[0].name;
   }, [categoryData]);
 
+  const addTransaction = (e) => {
+    e.preventDefault();
+    const f = e.target;
+    const newTx = {
+      id: Date.now(),
+      date: f.date.value,
+      amount: Number(f.amount.value),
+      category: f.category.value,
+      type: f.type.value
+    };
+    setTransactions(prev => [...prev, newTx]);
+    f.reset();
+    showToast("Transaction Added");
+  };
+
+  // ✅ NEW FUNCTIONS
   const showToast = (msg) => {
     setToast(msg);
     setTimeout(() => setToast(""), 2000);
@@ -94,21 +111,6 @@ export default function App() {
     showToast("Transaction Updated");
   };
 
-  const addTransaction = (e) => {
-    e.preventDefault();
-    const f = e.target;
-    const newTx = {
-      id: Date.now(),
-      date: f.date.value,
-      amount: Number(f.amount.value),
-      category: f.category.value,
-      type: f.type.value
-    };
-    setTransactions(prev => [...prev, newTx]);
-    f.reset();
-    showToast("Transaction Added");
-  };
-
   const exportCSV = () => {
     const rows = ["Date,Category,Amount,Type", ...transactions.map(t => `${t.date},${t.category},${t.amount},${t.type}`)];
     const blob = new Blob([rows.join("\n")], { type: "text/csv" });
@@ -123,48 +125,98 @@ export default function App() {
 
       <aside className="w-64 min-h-screen bg-gray-900 text-white p-6 fixed left-0 top-0">
         <h2 className="text-xl font-bold mb-6">Finance App</h2>
+<nav className="space-y-3 text-gray-300">
 
-        <nav className="space-y-3 text-gray-300">
-          <button onClick={() => document.getElementById("dashboard").scrollIntoView({ behavior: "smooth" })}>Dashboard</button>
-          <button onClick={() => document.getElementById("transactions").scrollIntoView({ behavior: "smooth" })}>Transactions</button>
-          <button onClick={() => document.getElementById("insights").scrollIntoView({ behavior: "smooth" })}>Insights</button>
-        </nav>
+  <button
+    className="block w-full text-left hover:text-white"
+    onClick={() => document.getElementById("dashboard").scrollIntoView({ behavior: "smooth" })}
+  >
+    Dashboard
+  </button>
+
+  <button
+    className="block w-full text-left hover:text-white"
+    onClick={() => document.getElementById("transactions").scrollIntoView({ behavior: "smooth" })}
+  >
+    Transactions
+  </button>
+
+  <button
+    className="block w-full text-left hover:text-white"
+    onClick={() => document.getElementById("insights").scrollIntoView({ behavior: "smooth" })}
+  >
+    Insights
+  </button>
+
+</nav>
       </aside>
 
-      <main className="flex-1 ml-64 p-4 md:p-8 bg-gray-100 dark:bg-gray-950 text-gray-900 dark:text-white">
+      <main className="flex-1 ml-64 p-4 md:p-8 bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">
 
         <div id="dashboard" className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Finance Dashboard</h1>
           <div className="flex gap-2">
-            <button onClick={()=>setDark(v=>!v)} className="px-3 py-1 rounded bg-black text-white dark:bg-white dark:text-black">Theme</button>
-            <button onClick={exportCSV} className="px-3 py-1 rounded bg-green-500 text-white dark:bg-green-400 dark:text-black">Export CSV</button>
+            <button onClick={()=>setDark(v=>!v)} className="px-3 py-1 rounded bg-black text-white">Theme</button>
+            <button onClick={exportCSV} className="px-3 py-1 rounded bg-green-500 text-white">Export CSV</button>
           </div>
         </div>
 
         <div className="flex gap-2 flex-wrap mb-4">
-          <select value={role} onChange={(e)=>setRole(e.target.value)} className="p-2 rounded border bg-white text-black dark:bg-gray-800 dark:text-white dark:border-gray-600">
+          <select value={role} onChange={(e)=>setRole(e.target.value)} className="p-2 rounded border">
             <option value="viewer">Viewer</option>
             <option value="admin">Admin</option>
           </select>
 
-          <select value={filter} onChange={(e)=>setFilter(e.target.value)} className="p-2 rounded border bg-white text-black dark:bg-gray-800 dark:text-white dark:border-gray-600">
+          <select value={filter} onChange={(e)=>setFilter(e.target.value)} className="p-2 rounded border">
             <option value="all">All</option>
             <option value="income">Income</option>
             <option value="expense">Expense</option>
           </select>
 
-          <select value={sort} onChange={(e)=>setSort(e.target.value)} className="p-2 rounded border bg-white text-black dark:bg-gray-800 dark:text-white dark:border-gray-600">
+          <select value={sort} onChange={(e)=>setSort(e.target.value)} className="p-2 rounded border">
             <option value="date">Sort by Date</option>
             <option value="amount">Sort by Amount</option>
           </select>
 
-          <input value={search} onChange={(e)=>setSearch(e.target.value)} placeholder="Search category" className="p-2 rounded border bg-white text-black dark:bg-gray-800 dark:text-white dark:border-gray-600" />
+          <input value={search} onChange={(e)=>setSearch(e.target.value)} placeholder="Search category" className="p-2 rounded border" />
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-4 mb-6">
+          {[{label:'Balance',value:balance},{label:'Income',value:income},{label:'Expense',value:expense}].map((i,idx)=>(
+            <motion.div key={idx} whileHover={{scale:1.05}} className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow">
+              <div className="text-sm opacity-70">{i.label}</div>
+              <div className="text-2xl font-semibold">₹{i.value}</div>
+            </motion.div>
+          ))}
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-6 mb-6">
+          <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow h-[300px]">
+            <ResponsiveContainer>
+              <LineChart data={transactions}>
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip />
+                <Line type="monotone" dataKey="amount" stroke="#6366f1" />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow h-[300px]">
+            <ResponsiveContainer>
+              <PieChart>
+                <Pie data={categoryData} dataKey="value" outerRadius={100}>
+                  {categoryData.map((e,i)=>(<Cell key={i} fill={COLORS[i%COLORS.length]} />))}
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
         </div>
 
         <div id="transactions" className="overflow-x-auto">
           <table className="w-full bg-white dark:bg-gray-800 rounded-xl shadow">
             <thead>
-              <tr className="bg-gray-200 dark:bg-gray-800 dark:text-white">
+              <tr className="bg-gray-200 dark:bg-gray-700">
                 <th className="p-2">Date</th>
                 <th className="p-2">Category</th>
                 <th className="p-2">Amount</th>
@@ -173,8 +225,10 @@ export default function App() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map(t => (
-                <tr key={t.id} className="text-center border-t dark:border-gray-700">
+              {filtered.length === 0 ? (
+                <tr><td colSpan="5" className="p-4 text-center">No Data</td></tr>
+              ) : filtered.map(t => (
+                <tr key={t.id} className="text-center border-t">
                   <td className="p-2">{t.date}</td>
                   <td className="p-2">{t.category}</td>
                   <td className="p-2">₹{t.amount}</td>
@@ -182,8 +236,8 @@ export default function App() {
 
                   {role === "admin" && (
                     <td className="p-2 space-x-2">
-                      <button onClick={()=>setEditId(t.id)} className="bg-yellow-500 text-white dark:bg-yellow-400 dark:text-black px-2 py-1 rounded">Edit</button>
-                      <button onClick={()=>deleteTransaction(t.id)} className="bg-red-500 text-white dark:bg-red-400 dark:text-black px-2 py-1 rounded">Delete</button>
+                      <button onClick={()=>setEditId(t.id)} className="bg-yellow-500 text-white px-2 py-1 rounded">Edit</button>
+                      <button onClick={()=>deleteTransaction(t.id)} className="bg-red-500 text-white px-2 py-1 rounded">Delete</button>
                     </td>
                   )}
                 </tr>
@@ -192,8 +246,42 @@ export default function App() {
           </table>
         </div>
 
+        {editId && role === "admin" && (
+          <form onSubmit={updateTransaction} className="mt-4 grid md:grid-cols-4 gap-2 bg-yellow-100 p-4 rounded">
+            <input name="date" type="date" required className="p-2 rounded border" />
+            <input name="amount" type="number" required className="p-2 rounded border" />
+            <input name="category" required className="p-2 rounded border" />
+            <select name="type" className="p-2 rounded border">
+              <option value="income">Income</option>
+              <option value="expense">Expense</option>
+            </select>
+            <button className="bg-yellow-500 text-white p-2 rounded col-span-full">Update</button>
+          </form>
+        )}
+
+        {role === 'admin' && (
+          <form onSubmit={addTransaction} className="mt-4 grid md:grid-cols-4 gap-2">
+            <input name="date" type="date" required className="p-2 rounded border" />
+            <input name="amount" type="number" required className="p-2 rounded border" />
+            <input name="category" required className="p-2 rounded border" />
+            <select name="type" className="p-2 rounded border">
+              <option value="income">Income</option>
+              <option value="expense">Expense</option>
+            </select>
+            <button className="bg-blue-500 text-white p-2 rounded col-span-full">Add Transaction</button>
+          </form>
+        )}
+
+        <div id="insights" className="mt-6 bg-white dark:bg-gray-800 p-4 rounded-xl shadow">
+          <h2 className="font-bold mb-2">Insights</h2>
+          <p>Highest spending category: {highestCategory}</p>
+          <p>Total transactions: {transactions.length}</p>
+          <p>Net balance: ₹{balance}</p>
+        </div>
+
+        {/* Toast */}
         {toast && (
-          <div className="fixed bottom-5 right-5 bg-black text-white dark:bg-white dark:text-black px-4 py-2 rounded shadow">
+          <div className="fixed bottom-5 right-5 bg-black text-white px-4 py-2 rounded shadow">
             {toast}
           </div>
         )}
