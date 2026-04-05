@@ -125,12 +125,30 @@ export default function App() {
 
       <aside className="w-64 min-h-screen bg-gray-900 text-white p-6 fixed left-0 top-0">
         <h2 className="text-xl font-bold mb-6">Finance App</h2>
+<nav className="space-y-3 text-gray-300">
 
-        <nav className="space-y-2 text-gray-300">
-          <button onClick={() => document.getElementById("dashboard").scrollIntoView({ behavior: "smooth" })}>Dashboard</button>
-          <button onClick={() => document.getElementById("transactions").scrollIntoView({ behavior: "smooth" })}>Transactions</button>
-          <button onClick={() => document.getElementById("insights").scrollIntoView({ behavior: "smooth" })}>Insights</button>
-        </nav>
+  <button
+    className="block w-full text-left hover:text-white"
+    onClick={() => document.getElementById("dashboard").scrollIntoView({ behavior: "smooth" })}
+  >
+    Dashboard
+  </button>
+
+  <button
+    className="block w-full text-left hover:text-white"
+    onClick={() => document.getElementById("transactions").scrollIntoView({ behavior: "smooth" })}
+  >
+    Transactions
+  </button>
+
+  <button
+    className="block w-full text-left hover:text-white"
+    onClick={() => document.getElementById("insights").scrollIntoView({ behavior: "smooth" })}
+  >
+    Insights
+  </button>
+
+</nav>
       </aside>
 
       <main className="flex-1 ml-64 p-4 md:p-8 bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">
